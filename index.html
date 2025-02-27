@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stripe Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@1.6.5/dist/flowbite.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #5D5CDE;
+            --text-color-light: #333333;
+            --text-color-dark: #F3F4F6;
+            --bg-color-light: #FFFFFF;
+            --bg-color-dark: #181818;
+            --card-bg-light: #F9FAFB;
+            --card-bg-dark: #1F1F1F;
+            --border-color-light: #E5E7EB;
+            --border-color-dark: #374151;
+        }
+        
+        html {
+            height: 100%;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            min-height: 100%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            padding: 1rem;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: var(--bg-color-dark);
+                color: var(--text-color-dark);
+            }
+        }
+        
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--border-color-light);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .app-container {
+                background-color: var(--card-bg-dark);
+                border-color: var(--border-color-dark);
+            }
+        }
+        
+        .file-input-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--border-color-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .file-input-container {
+                border-color: var(--border-color-dark);
+            }
+        }
+        
+        .file-input-container:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .preview-container {
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        
+        .stripe-output {
+            margin-top: 1.5rem;
+            position: relative;
+        }
+        
+        .stripe-container {
+            width: 100%;
+            position: relative;
+            margin-top: 1rem;
+        }
+        
+        .stripe-text {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            left: 50%;
+            transform: translateX(-50%);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #4B4AC6;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .spinner {
+                border-color: rgba(255, 255, 255, 0.1);
+                border-top-color: var(--primary-color);
+            }
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border-color-light);
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            font-size: 16px;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .input-field {
+                border-color: var(--border-color-dark);
+                background-color: var(--bg-color-dark);
+                color: var(--text-color-dark);
+            }
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(93, 92, 222, 0.25);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .modal-content {
+                background-color: var(--bg-color-dark);
+                color: var(--text-color-dark);
+            }
+        }
+        
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .download-hint {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .download-hint {
+                color: #9CA3AF;
+            }
+        }
+        
+        .result-image {
+            max-width: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1 class="text-2xl font-bold mb-4">图片条纹生成器</h1>
+        <p class="mb-4">上传一张图片，我将使用图片底部的10px高度区域进行条纹拼接</p>
+        
+        <div id="uploadSection">
+            <div class="file-input-container">
+                <input type="file" id="imageInput" class="file-input" accept="image/*">
+                <div id="dropText">拖放图片到这里或点击上传</div>
+            </div>
+        </div>
+        
+        <div id="previewSection" class="preview-container" style="display: none;">
+            <h2 class="text-xl font-bold mb-2">原始图片</h2>
+            <img id="previewImage" class="preview-image">
+            
+            <div class="form-group">
+                <label for="repeatCount" class="block mb-2">拼接次数:</label>
+                <input type="number" id="repeatCount" min="1" max="50" value="5" class="input-field">
+            </div>
+            
+            <div class="form-group">
+                <label for="defaultText" class="block mb-2">默认文字 (可选):</label>
+                <input type="text" id="defaultText" placeholder="在所有条纹上显示的文字" class="input-field">
+                <div class="mt-2 flex items-center">
+                    <input type="checkbox" id="enableCustomText" class="mr-2">
+                    <label for="enableCustomText">为每个条纹独立设置文字</label>
+                </div>
+            </div>
+            
+            <div id="customTextContainer" class="form-group" style="display: none;">
+                <label class="block mb-2">每条拼接独立文字设置:</label>
+                <div id="textInputsContainer" class="border border-gray-300 rounded p-3 max-h-48 overflow-y-auto dark:border-gray-600">
+                    <!-- 动态生成的文本输入框将在这里显示 -->
+                    <div class="text-center text-gray-500">设置拼接次数后自动生成输入框</div>
+                </div>
+            </div>
+            
+            <button id="generateButton" class="mt-4">生成条纹</button>
+            <button id="resetButton" class="mt-4 ml-2">重置</button>
+        </div>
+        
+        <div id="stripeOutput" class="stripe-output" style="display: none;">
+            <h2 class="text-xl font-bold mb-2">拼接结果:</h2>
+            <div id="stripeContainer" class="stripe-container"></div>
+            <div class="mt-4 flex justify-center">
+                <button id="downloadButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    保存图片
+                </button>
+            </div>
+            <p class="download-hint text-center mt-2">点击上方按钮保存拼接结果</p>
+        </div>
+        
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <span>处理中...</span>
+        </div>
+    </div>
+    
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" id="closeModal">&times;</span>
+            <h2 class="text-xl font-bold mb-4">编辑文字</h2>
+            <div class="form-group">
+                <label for="textInput" class="block mb-2">文字内容:</label>
+                <input type="text" id="textInput" class="input-field">
+            </div>
+            <button id="saveTextButton" class="mt-4">保存</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const imageInput = document.getElementById('imageInput');
+            const dropText = document.getElementById('dropText');
+            const uploadSection = document.getElementById('uploadSection');
+            const previewSection = document.getElementById('previewSection');
+            const previewImage = document.getElementById('previewImage');
+            const repeatCount = document.getElementById('repeatCount');
+            const defaultText = document.getElementById('defaultText');
+            const enableCustomText = document.getElementById('enableCustomText');
+            const customTextContainer = document.getElementById('customTextContainer');
+            const textInputsContainer = document.getElementById('textInputsContainer');
+            const generateButton = document.getElementById('generateButton');
+            const resetButton = document.getElementById('resetButton');
+            const stripeOutput = document.getElementById('stripeOutput');
+            const stripeContainer = document.getElementById('stripeContainer');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const editModal = document.getElementById('editModal');
+            const closeModal = document.getElementById('closeModal');
+            const textInput = document.getElementById('textInput');
+            const saveTextButton = document.getElementById('saveTextButton');
+            
+            let uploadedImage = null;
+            let currentEditStripeIndex = null;
+            let stripeTexts = [];
+            
+            // Handle file input change
+            imageInput.addEventListener('change', handleImageUpload);
+            
+            // Handle drag and drop
+            const fileInputContainer = document.querySelector('.file-input-container');
+            
+            fileInputContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileInputContainer.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+            });
+            
+            fileInputContainer.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                fileInputContainer.style.borderColor = '';
+            });
+            
+            fileInputContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileInputContainer.style.borderColor = '';
+                
+                if (e.dataTransfer.files.length) {
+                    imageInput.files = e.dataTransfer.files;
+                    handleImageUpload();
+                }
+            });
+            
+            // Handle image upload
+            function handleImageUpload() {
+                if (imageInput.files && imageInput.files[0]) {
+                    const file = imageInput.files[0];
+                    
+                    if (!file.type.match('image.*')) {
+                        alert('请上传图片文件');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        uploadedImage = new Image();
+                        uploadedImage.onload = function() {
+                            previewImage.src = e.target.result;
+                            uploadSection.style.display = 'none';
+                            previewSection.style.display = 'block';
+                        };
+                        uploadedImage.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            // Handle custom text inputs
+            repeatCount.addEventListener('input', updateTextInputs);
+            enableCustomText.addEventListener('change', () => {
+                customTextContainer.style.display = enableCustomText.checked ? 'block' : 'none';
+                updateTextInputs();
+            });
+            
+            function updateTextInputs() {
+                const count = Math.max(1, Math.min(50, parseInt(repeatCount.value) || 5));
+                
+                // Clear current inputs
+                textInputsContainer.innerHTML = '';
+                
+                // Generate input fields for each stripe
+                for (let i = 0; i < count; i++) {
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'mb-2';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = `条纹 ${i + 1}:`;
+                    label.className = 'inline-block w-16';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'input-field custom-text-input';
+                    input.placeholder = `条纹 ${i + 1} 的文字`;
+                    input.dataset.index = i;
+                    input.style.display = 'inline-block';
+                    input.style.width = 'calc(100% - 70px)';
+                    
+                    inputGroup.appendChild(label);
+                    inputGroup.appendChild(input);
+                    textInputsContainer.appendChild(inputGroup);
+                }
+            }
+            
+            // Generate stripes
+            generateButton.addEventListener('click', generateStripes);
+            
+            function generateStripes() {
+                if (!uploadedImage) {
+                    alert('请先上传图片');
+                    return;
+                }
+                
+                loadingIndicator.style.display = 'flex';
+                
+                // Clear previous stripes
+                stripeContainer.innerHTML = '';
+                stripeOutput.style.display = 'none';
+                
+                // Get repeat count
+                const count = Math.max(1, Math.min(50, parseInt(repeatCount.value) || 5));
+                
+                // Initialize stripeTexts array
+                if (enableCustomText.checked) {
+                    // Get text from individual inputs
+                    stripeTexts = Array(count).fill('');
+                    const customInputs = document.querySelectorAll('.custom-text-input');
+                    customInputs.forEach(input => {
+                        const index = parseInt(input.dataset.index);
+                        if (index < count) {
+                            stripeTexts[index] = input.value || '';
+                        }
+                    });
+                } else {
+                    // Use the same text for all stripes
+                    stripeTexts = Array(count).fill(defaultText.value || '');
+                }
+                
+                setTimeout(() => {
+                    // Create canvas to extract bottom 10px stripe
+                    const stripeCanvas = document.createElement('canvas');
+                    const stripeCtx = stripeCanvas.getContext('2d');
+                    
+                    // Set canvas dimensions to match the bottom 10px stripe
+                    stripeCanvas.width = uploadedImage.width;
+                    stripeCanvas.height = 10;
+                    
+                    // Draw the bottom 10px of the image
+                    stripeCtx.drawImage(
+                        uploadedImage,
+                        0, uploadedImage.height - 10,  // Source position (x, y)
+                        uploadedImage.width, 10,       // Source dimensions (width, height)
+                        0, 0,                          // Destination position (x, y)
+                        stripeCanvas.width, stripeCanvas.height    // Destination dimensions (width, height)
+                    );
+                    
+                    // Create result canvas that will contain original image + stripes
+                    const resultCanvas = document.createElement('canvas');
+                    const resultCtx = resultCanvas.getContext('2d');
+                    
+                    // Set result canvas dimensions to include original image and stripes
+                    resultCanvas.width = uploadedImage.width;
+                    resultCanvas.height = uploadedImage.height + (10 * count);
+                    
+                    // Draw the original image at the top
+                    resultCtx.drawImage(uploadedImage, 0, 0);
+                    
+                    // Draw stripes below the original image and add text
+                    for (let i = 0; i < count; i++) {
+                        // Draw the stripe
+                        resultCtx.drawImage(
+                            stripeCanvas, 
+                            0, 
+                            uploadedImage.height + (i * 10)
+                        );
+                        
+                        // Add text to the stripe
+                        if (stripeTexts[i]) {
+                            resultCtx.save();
+                            // Set text properties
+                            resultCtx.font = 'bold 9px Arial';
+                            resultCtx.fillStyle = 'white';
+                            resultCtx.textAlign = 'center';
+                            resultCtx.textBaseline = 'middle';
+                            
+                            // Add text shadow for better visibility
+                            resultCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                            resultCtx.shadowBlur = 3;
+                            resultCtx.shadowOffsetX = 1;
+                            resultCtx.shadowOffsetY = 1;
+                            
+                            // Position and draw the text
+                            const xPos = resultCanvas.width / 2;
+                            const yPos = uploadedImage.height + (i * 10) + 5; // Center in the stripe
+                            resultCtx.fillText(stripeTexts[i], xPos, yPos);
+                            resultCtx.restore();
+                        }
+                    }
+                    
+                    // Create a map of clickable areas for text editing
+                    const clickAreas = [];
+                    
+                    // Convert canvas to image and add to DOM
+                    const resultImg = document.createElement('img');
+                    resultImg.className = 'result-image';
+                    resultImg.src = resultCanvas.toDataURL('image/png');
+                    
+                    // Create container for the result
+                    const resultContainer = document.createElement('div');
+                    resultContainer.style.position = 'relative';
+                    resultContainer.style.width = '100%';
+                    
+                    // 添加自定义右键菜单
+                    const customContextMenu = document.createElement('div');
+                    customContextMenu.className = 'custom-context-menu';
+                    customContextMenu.style.position = 'absolute';
+                    customContextMenu.style.display = 'none';
+                    customContextMenu.style.zIndex = '1000';
+                    customContextMenu.style.backgroundColor = 'white';
+                    customContextMenu.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                    customContextMenu.style.borderRadius = '4px';
+                    customContextMenu.style.padding = '8px 0';
+                    
+                    // 添加下载选项
+                    const downloadOption = document.createElement('div');
+                    downloadOption.textContent = '保存图片';
+                    downloadOption.style.padding = '8px 16px';
+                    downloadOption.style.cursor = 'pointer';
+                    downloadOption.style.fontSize = '14px';
+                    downloadOption.style.color = '#333';
+                    
+                    downloadOption.addEventListener('mouseover', function() {
+                        this.style.backgroundColor = '#f0f0f0';
+                    });
+                    
+                    downloadOption.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+                    
+                    downloadOption.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // 触发下载
+                        const link = document.createElement('a');
+                        link.download = '拼接图片_' + new Date().getTime() + '.png';
+                        link.href = resultCanvas.toDataURL('image/png');
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // 隐藏右键菜单
+                        customContextMenu.style.display = 'none';
+                    });
+                    
+                    customContextMenu.appendChild(downloadOption);
+                    
+                    // 添加复制选项
+                    const copyOption = document.createElement('div');
+                    copyOption.textContent = '复制图片';
+                    copyOption.style.padding = '8px 16px';
+                    copyOption.style.cursor = 'pointer';
+                    copyOption.style.fontSize = '14px';
+                    copyOption.style.color = '#333';
+                    
+                    copyOption.addEventListener('mouseover', function() {
+                        this.style.backgroundColor = '#f0f0f0';
+                    });
+                    
+                    copyOption.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+                    
+                    copyOption.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        try {
+                            // 尝试复制图片到剪贴板
+                            resultCanvas.toBlob(async function(blob) {
+                                try {
+                                    const item = new ClipboardItem({'image/png': blob});
+                                    await navigator.clipboard.write([item]);
+                                    alert('图片已复制到剪贴板！');
+                                } catch (err) {
+                                    console.error('复制失败:', err);
+                                    alert('复制失败，请使用保存图片选项');
+                                }
+                            });
+                        } catch (error) {
+                            console.error('复制到剪贴板失败:', error);
+                            alert('复制失败，请使用保存图片选项');
+                        }
+                        
+                        // 隐藏右键菜单
+                        customContextMenu.style.display = 'none';
+                    });
+                    
+                    customContextMenu.appendChild(copyOption);
+                    
+                    // 添加取消选项
+                    const cancelOption = document.createElement('div');
+                    cancelOption.textContent = '取消';
+                    cancelOption.style.padding = '8px 16px';
+                    cancelOption.style.cursor = 'pointer';
+                    cancelOption.style.fontSize = '14px';
+                    cancelOption.style.color = '#333';
+                    cancelOption.style.borderTop = '1px solid #e0e0e0';
+                    
+                    cancelOption.addEventListener('mouseover', function() {
+                        this.style.backgroundColor = '#f0f0f0';
+                    });
+                    
+                    cancelOption.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+                    
+                    cancelOption.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        customContextMenu.style.display = 'none';
+                    });
+                    
+                    customContextMenu.appendChild(cancelOption);
+                    
+                    // 在深色模式下的样式适配
+                    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+                    if (prefersDarkScheme.matches) {
+                        customContextMenu.style.backgroundColor = '#333';
+                        customContextMenu.style.color = '#fff';
+                        
+                        downloadOption.style.color = '#fff';
+                        copyOption.style.color = '#fff';
+                        cancelOption.style.color = '#fff';
+                        
+                        downloadOption.addEventListener('mouseover', function() {
+                            this.style.backgroundColor = '#444';
+                        });
+                        
+                        copyOption.addEventListener('mouseover', function() {
+                            this.style.backgroundColor = '#444';
+                        });
+                        
+                        cancelOption.addEventListener('mouseover', function() {
+                            this.style.backgroundColor = '#444';
+                        });
+                        
+                        cancelOption.style.borderTop = '1px solid #555';
+                    }
+                    
+                    // 监听右键点击事件
+                    resultImg.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        
+                        // 计算菜单位置，确保在视口内
+                        const rect = resultContainer.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        
+                        // 设置位置
+                        customContextMenu.style.left = x + 'px';
+                        customContextMenu.style.top = y + 'px';
+                        customContextMenu.style.display = 'block';
+                    });
+                    
+                    // 长按支持（移动设备）
+                    let longPressTimer;
+                    resultImg.addEventListener('touchstart', function(e) {
+                        longPressTimer = setTimeout(function() {
+                            e.preventDefault();
+                            const touch = e.touches[0];
+                            const rect = resultContainer.getBoundingClientRect();
+                            const x = touch.clientX - rect.left;
+                            const y = touch.clientY - rect.top;
+                            
+                            customContextMenu.style.left = x + 'px';
+                            customContextMenu.style.top = y + 'px';
+                            customContextMenu.style.display = 'block';
+                        }, 500); // 500毫秒长按
+                    });
+                    
+                    resultImg.addEventListener('touchend', function() {
+                        clearTimeout(longPressTimer);
+                    });
+                    
+                    resultImg.addEventListener('touchmove', function() {
+                        clearTimeout(longPressTimer);
+                    });
+                    
+                    // 点击其他区域关闭右键菜单
+                    document.addEventListener('click', function() {
+                        customContextMenu.style.display = 'none';
+                    });
+                    
+                    resultContainer.appendChild(resultImg);
+                    resultContainer.appendChild(customContextMenu);
+                    
+                    // Set up download button with improved functionality
+                    const downloadButton = document.getElementById('downloadButton');
+                    const originalButtonText = downloadButton.innerHTML;
+                    
+                    downloadButton.addEventListener('click', function() {
+                        try {
+                            // Change button text to provide feedback
+                            downloadButton.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>处理中...';
+                            
+                            // Create a data URL from the canvas
+                            const dataURL = resultCanvas.toDataURL('image/png');
+                            
+                            // Create an anchor element
+                            const link = document.createElement('a');
+                            
+                            // Set download attributes
+                            link.download = '拼接图片_' + new Date().getTime() + '.png';
+                            link.href = dataURL;
+                            
+                            // Add the link to the document temporarily
+                            document.body.appendChild(link);
+                            
+                            // Trigger click programmatically
+                            setTimeout(() => {
+                                link.click();
+                                
+                                // Clean up by removing the link
+                                document.body.removeChild(link);
+                                
+                                // Reset button text after a short delay
+                                setTimeout(() => {
+                                    downloadButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>下载成功';
+                                    
+                                    // Reset to original state after showing success
+                                    setTimeout(() => {
+                                        downloadButton.innerHTML = originalButtonText;
+                                    }, 2000);
+                                }, 500);
+                            }, 100);
+                            
+                        } catch (error) {
+                            console.error('下载失败:', error);
+                            downloadButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>下载失败';
+                            
+                            // Show failed state for 2 seconds then revert
+                            setTimeout(() => {
+                                downloadButton.innerHTML = originalButtonText;
+                            }, 2000);
+                            
+                            // Add a more visible error message
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'text-red-500 text-center mt-2';
+                            errorMsg.textContent = '下载失败。请尝试右键点击图片，然后选择"图片另存为..."';
+                            
+                            const downloadHint = document.querySelector('.download-hint');
+                            downloadHint.parentNode.insertBefore(errorMsg, downloadHint.nextSibling);
+                            
+                            // Remove the error message after 5 seconds
+                            setTimeout(() => {
+                                errorMsg.remove();
+                            }, 5000);
+                        }
+                    });
+                    
+                    // Add invisible clickable areas for text editing
+                    for (let i = 0; i < count; i++) {
+                        const clickArea = document.createElement('div');
+                        clickArea.style.position = 'absolute';
+                        clickArea.style.left = '0';
+                        clickArea.style.width = '100%';
+                        clickArea.style.height = '10px';
+                        clickArea.style.top = `${uploadedImage.height + (i * 10)}px`;
+                        clickArea.style.cursor = 'pointer';
+                        clickArea.dataset.index = i;
+                        
+                        clickArea.addEventListener('click', function() {
+                            openEditModal(parseInt(this.dataset.index));
+                        });
+                        
+                        resultContainer.appendChild(clickArea);
+                        clickAreas.push(clickArea);
+                    }
+                    
+                    // Add to the DOM
+                    stripeContainer.appendChild(resultContainer);
+                    stripeOutput.style.display = 'block';
+                    loadingIndicator.style.display = 'none';
+                    
+                    // After editing text, we need to regenerate the image
+                    window.updateImageWithText = function() {
+                        // Redraw everything with updated text
+                        for (let i = 0; i < count; i++) {
+                            // Clear and redraw the stripe
+                            resultCtx.drawImage(
+                                stripeCanvas,
+                                0,
+                                uploadedImage.height + (i * 10),
+                                stripeCanvas.width,
+                                10
+                            );
+                            
+                            // Add updated text
+                            if (stripeTexts[i]) {
+                                resultCtx.save();
+                                resultCtx.font = 'bold 9px Arial';
+                                resultCtx.fillStyle = 'white';
+                                resultCtx.textAlign = 'center';
+                                resultCtx.textBaseline = 'middle';
+                                
+                                resultCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                                resultCtx.shadowBlur = 3;
+                                resultCtx.shadowOffsetX = 1;
+                                resultCtx.shadowOffsetY = 1;
+                                
+                                const xPos = resultCanvas.width / 2;
+                                const yPos = uploadedImage.height + (i * 10) + 5;
+                                resultCtx.fillText(stripeTexts[i], xPos, yPos);
+                                resultCtx.restore();
+                            }
+                        }
+                        
+                        // Update the image source
+                        resultImg.src = resultCanvas.toDataURL('image/png');
+                    };
+                }, 100);
+            }
+            
+            // Reset function
+            resetButton.addEventListener('click', () => {
+                uploadedImage = null;
+                imageInput.value = '';
+                previewSection.style.display = 'none';
+                stripeOutput.style.display = 'none';
+                uploadSection.style.display = 'block';
+            });
+            
+            // Edit modal functions
+            function openEditModal(index) {
+                currentEditStripeIndex = index;
+                textInput.value = stripeTexts[index];
+                editModal.style.display = 'flex';
+            }
+            
+            closeModal.addEventListener('click', () => {
+                editModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === editModal) {
+                    editModal.style.display = 'none';
+                }
+            });
+            
+            saveTextButton.addEventListener('click', () => {
+                if (currentEditStripeIndex !== null) {
+                    const newText = textInput.value;
+                    stripeTexts[currentEditStripeIndex] = newText;
+                    
+                    // Update the canvas with the new text
+                    if (window.updateImageWithText) {
+                        window.updateImageWithText();
+                    }
+                    
+                    editModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
